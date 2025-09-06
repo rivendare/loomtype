@@ -1,0 +1,83 @@
+# React TypeScript app with modern patterns
+version: 1.0
+name: React TypeScript App
+description: React app with TypeScript, testing, and performance patterns
+
+patterns:
+  'TypeScript Setup':
+    - Enable strict mode in tsconfig.json for better type safety
+    - Define types/interfaces for all props and state
+    - Avoid using 'any' type - use 'unknown' if type is truly unknown
+    - Export types alongside components when they're reusable
+  
+  'Component Patterns':
+    - Keep components focused and under 150 lines
+    - Use custom hooks for reusable logic (useAuth, useFetch, etc.)
+    - Handle loading and error states in components that fetch data
+    - Add key props to list items for proper React reconciliation
+    - Memoize expensive computations with useMemo
+  
+  'State & Data':
+    - Use built-in hooks (useState, useEffect) for local state
+    - Consider React Query or SWR for server state caching
+    - Lift state up only when necessary (avoid prop drilling)
+    - Use URL params for shareable state (filters, pagination)
+  
+  'Testing':
+    - Test user interactions, not implementation details
+    - Use React Testing Library for component tests
+    - Write at least one test per component
+    - Test both happy path and error states
+    - Mock API calls in tests
+  
+  'Performance':
+    - Split code by routes (lazy load with React.lazy)
+    - Optimize large lists with pagination or virtualization
+    - Use production builds for deployment
+    - Avoid inline function definitions in render
+
+verify:
+  typescript-config:
+    check: test -f tsconfig.json
+    expect: found
+    on_fail: "Create tsconfig.json: npx tsc --init"
+  
+  typescript-strict:
+    check: grep '"strict".*true' tsconfig.json
+    expect: found
+    on_fail: "Enable strict mode in tsconfig.json for better type safety"
+  
+  components-typed:
+    check: grep -rE "React.FC|Props.*=|interface.*Props|type.*Props" --include="*.tsx" src/
+    expect: found
+    on_fail: "Add TypeScript types to your component props"
+  
+  loading-states:
+    check: grep -rE "loading|isLoading|pending" --include="*.tsx" --include="*.ts" src/
+    expect: found
+    on_fail: "Handle loading states in components that fetch data"
+  
+  error-handling:
+    check: grep -rE "error|isError|catch" --include="*.tsx" --include="*.ts" src/
+    expect: found
+    on_fail: "Add error handling to async operations"
+  
+  tests-exist:
+    check: find src -name "*.test.tsx" -o -name "*.test.ts" | head -1
+    expect: found
+    on_fail: "Add tests for your components (*.test.tsx files)"
+  
+  testing-library:
+    check: grep -rE "render\(|screen\.|fireEvent|userEvent|waitFor" --include="*.test.tsx" --include="*.test.ts" src/
+    expect: found
+    on_fail: "Use React Testing Library for testing components"
+  
+  lazy-loading:
+    check: grep -rE "lazy\(|React.lazy" --include="*.tsx" --include="*.ts" src/
+    expect: found
+    on_fail: "Use React.lazy() for code splitting on routes"
+  
+  key-props:
+    check: grep -rE "\.map\(.*key=" --include="*.tsx" src/
+    expect: found
+    on_fail: "Add key props to mapped list items"

@@ -1,0 +1,79 @@
+# Node.js REST API with production patterns
+version: 1.0
+name: Production API
+description: REST API with security, observability, and data patterns
+
+patterns:
+  'Database Patterns':
+    - Add created_at and updated_at timestamps to all tables
+    - Implement soft delete with deleted_at timestamp for user data
+    - Add database indexes on foreign keys and commonly filtered fields
+    - Use transactions for operations that modify multiple records
+    - Never expose database IDs in URLs - use slugs or UUIDs
+  
+  'API Security':
+    - Rate limit public endpoints (100 req/min authenticated, 10 for anonymous)
+    - Add helmet.js for security headers
+    - Validate all request inputs with Joi, Zod, or express-validator
+    - Always use parameterized queries or an ORM
+    - Store passwords with bcrypt or argon2
+  
+  'Error Handling':
+    - Never expose stack traces in production responses
+    - Include request IDs in error logs for debugging
+    - Return consistent error format: {error: {message, code}}
+    - Set reasonable timeouts on all external API calls
+    - Catch and handle Promise rejections
+  
+  'API Standards':
+    - Implement pagination on all list endpoints (limit/offset or cursor)
+    - Use proper HTTP status codes (201 for created, 204 for no content)
+    - Support filtering and sorting on list endpoints
+    - Validate Content-Type on POST/PUT requests
+    - Return consistent response structure
+
+verify:
+  timestamps:
+    check: grep -rE "createdAt|created_at|timestamps.*true" --include="*.js" --include="*.ts"
+    expect: found
+    on_fail: "Add created_at/updated_at timestamps to your database models"
+  
+  soft-delete:
+    check: grep -rE "deletedAt|deleted_at|paranoid" --include="*.js" --include="*.ts"
+    expect: found  
+    on_fail: "Add soft delete for user data (deletedAt field or paranoid option)"
+  
+  rate-limiting:
+    check: grep -rE "rateLimit|RateLimit|limiter" --include="*.js" --include="*.ts"
+    expect: found
+    on_fail: "Add rate limiting middleware (express-rate-limit or similar)"
+  
+  helmet-security:
+    check: grep -r "helmet()" --include="*.js" --include="*.ts"
+    expect: found
+    on_fail: "Add helmet middleware for security headers: app.use(helmet())"
+  
+  input-validation:
+    check: grep -rE "\.validate\(|\.safeParse\(|validationResult|Joi\..*\(|z\." --include="*.js" --include="*.ts"
+    expect: found
+    on_fail: "Add input validation to your route handlers"
+  
+  password-hashing:
+    check: grep -rE "bcrypt|argon2|scrypt" --include="*.js" --include="*.ts"
+    expect: found
+    on_fail: "Use bcrypt or argon2 to hash passwords"
+  
+  error-handler:
+    check: grep -r "app.use.*err.*req.*res" --include="*.js" --include="*.ts"
+    expect: found
+    on_fail: "Add error handling middleware: app.use((err, req, res, next) => {...})"
+  
+  pagination:
+    check: grep -rE "limit.*offset|page.*perPage|limit.*skip" --include="*.js" --include="*.ts"
+    expect: found
+    on_fail: "Implement pagination on list endpoints"
+  
+  http-status:
+    check: grep -rE "res.status\(201\)|res.status\(204\)|res.status\(404\)" --include="*.js" --include="*.ts"
+    expect: found
+    on_fail: "Use proper HTTP status codes (201 for created, 404 for not found, etc.)"

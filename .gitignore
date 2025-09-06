@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+bin/
+
+# Test artifacts
+*.test.js
+coverage/
+
+# IDE
+.vscode/
+
+# Temp files
+*.tmp
+*.log

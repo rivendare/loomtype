@@ -1,0 +1,84 @@
+# Django application with production patterns
+version: 1.0
+name: Django Production App
+description: Django app with security, performance, and testing patterns
+
+patterns:
+  'Django Security':
+    - Use environment variables for secrets (SECRET_KEY, database credentials)
+    - Set DEBUG = False in production
+    - Configure ALLOWED_HOSTS properly
+    - Use HTTPS in production (SECURE_SSL_REDIRECT)
+    - Set up CORS headers if you have a separate frontend
+  
+  'Database & Models':
+    - Always use migrations for schema changes
+    - Add indexes on frequently queried fields
+    - Use select_related() and prefetch_related() to avoid N+1 queries
+    - Add __str__ methods to all models for admin interface
+    - Use Django's built-in User model or extend AbstractUser
+  
+  'Testing Standards':
+    - Write tests for your views and models
+    - Use Django's TestCase or pytest-django
+    - Test both success and error cases
+    - Use factories or fixtures for test data
+    - Mock external services in tests
+  
+  'Performance':
+    - Paginate list views (don't load thousands of records)
+    - Use Django's cache framework for expensive queries
+    - Serve static files properly (WhiteNoise or CDN)
+    - Add django-debug-toolbar in development
+    - Use database connection pooling in production
+
+verify:
+  env-secrets:
+    check: grep -rE "os.environ|os.getenv|env\(" --include="*.py" | grep -E "SECRET_KEY|DATABASE"
+    expect: found
+    on_fail: "Use environment variables for SECRET_KEY and database credentials"
+  
+  debug-false:
+    check: grep -E "DEBUG.*=.*False" settings.py || grep -E "DEBUG.*=.*False" settings/production.py
+    expect: found
+    on_fail: "Set DEBUG = False in production settings"
+  
+  allowed-hosts:
+    check: grep -E "ALLOWED_HOSTS.*\[" --include="*.py"
+    expect: found
+    on_fail: "Configure ALLOWED_HOSTS with your domain names"
+  
+  migrations-exist:
+    check: find . -path "*/migrations/0*.py" | head -1
+    expect: found
+    on_fail: "Create migrations: python manage.py makemigrations"
+  
+  models-have-str:
+    check: grep -E "def __str__" --include="models.py" -r .
+    expect: found
+    on_fail: "Add __str__ methods to your models for better admin experience"
+  
+  tests-exist:
+    check: find . -name "test*.py" -o -name "*test.py" | grep -v __pycache__ | head -1
+    expect: found
+    on_fail: "Add tests for your Django app"
+  
+  static-files:
+    check: grep -E "STATIC_ROOT|STATICFILES" settings.py || grep -E "whitenoise" requirements.txt
+    expect: found
+    on_fail: "Configure static files handling (STATIC_ROOT or WhiteNoise)"
+  
+  pagination:
+    check: grep -rE "paginate_by|Paginator|page_size" --include="*.py"
+    expect: found
+    on_fail: "Add pagination to list views to avoid loading too many records"
+  
+  requirements-file:
+    check: test -f requirements.txt || test -f requirements/base.txt || test -f pyproject.toml
+    expect: found
+    on_fail: "Create requirements.txt with your dependencies"
+  
+  database-config:
+    check: grep -E "DATABASES.*=.*{" settings.py || grep -E "DATABASE_URL" --include="*.py"
+    expect: found
+    on_fail: "Configure database settings"
