@@ -158,7 +158,7 @@ describe('loomtype CLI integration tests', () => {
 
       expect(error).toBeDefined();
       expect(error?.status).toBe(1);
-      expect(error?.stderr).toContain('No .loomtype.yaml found');
+      expect(error?.stderr).toContain('No .loomtype.yaml or .loomtype.yml found');
     });
 
     it('should handle invalid YAML gracefully', () => {
@@ -226,6 +226,47 @@ describe('loomtype CLI integration tests', () => {
       expect(output).toContain('exit-code-check... ✓');
       expect(output).toContain('default-found-check... ✓');
       expect(output).toContain('All checks passed (4/4)');
+    });
+
+    it('should support .loomtype.yml extension', () => {
+      // clean up any existing files
+      if (fs.existsSync('.loomtype.yaml')) {
+        fs.unlinkSync('.loomtype.yaml');
+      }
+      if (fs.existsSync('.loomtype.yml')) {
+        fs.unlinkSync('.loomtype.yml');
+      }
+
+      const config = dedent(`
+        version: 1.0
+        name: Test
+        verify:
+          simple-check:
+            check: echo "hello"
+            expect: hello
+      `);
+      fs.writeFileSync('.loomtype.yml', config);
+
+      const output = execSync(`node ${cli} verify`, { encoding: 'utf8' });
+      expect(output).toContain('simple-check... ✓');
+
+      // clean up
+      fs.unlinkSync('.loomtype.yml');
+    });
+
+    it('should show elapsed time for slow checks', () => {
+      const config = dedent(`
+        version: 1.0
+        name: Test
+        verify:
+          slow-check:
+            check: sleep 1.1 && echo "done"
+            expect: done
+      `);
+      fs.writeFileSync('.loomtype.yaml', config);
+
+      const output = execSync(`node ${cli} verify`, { encoding: 'utf8' });
+      expect(output).toMatch(/slow-check\.\.\. ✓ \(1\.\ds\)/);
     });
   });
 });

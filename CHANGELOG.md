@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2024-09-06
+
+### Added
+
+- Support for `.loomtype.yml` extension in addition to `.loomtype.yaml`
+- Elapsed time display for checks taking longer than 1 second
+
+### Changed
+
+- Error message now mentions both `.yaml` and `.yml` extensions when config not found
+
 ## [0.1.0] - 2024-09-06
 
 ### Added
@@ -35,5 +46,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Integration tests using Jest
 - GitHub Actions CI for multiple Node versions
 
-[Unreleased]: https://github.com/rivendare/loomtype/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/rivendare/loomtype/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/rivendare/loomtype/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/rivendare/loomtype/releases/tag/v0.1.0

@@ -23,11 +23,22 @@ const DEFAULT_TIMEOUT_MS = 10000;
 const SEPARATOR_LENGTH = 40;
 
 class Loomtype {
-  private configPath = '.loomtype.yaml';
+  private configPath: string;
+
+  constructor() {
+    // support both .yaml and .yml extensions
+    if (fs.existsSync('.loomtype.yaml')) {
+      this.configPath = '.loomtype.yaml';
+    } else if (fs.existsSync('.loomtype.yml')) {
+      this.configPath = '.loomtype.yml';
+    } else {
+      this.configPath = '.loomtype.yaml'; // default for init
+    }
+  }
 
   loadConfig(): Config {
     if (!fs.existsSync(this.configPath)) {
-      console.error(chalk.red('No .loomtype.yaml found'));
+      console.error(chalk.red('No .loomtype.yaml or .loomtype.yml found'));
       console.log('\nRun `loomtype init` to create one');
       process.exit(1);
     }
@@ -64,6 +75,7 @@ class Loomtype {
 
     for (const [name, check] of Object.entries(config.verify)) {
       process.stdout.write(`${name}... `);
+      const startTime = Date.now();
 
       try {
         const output = execSync(check.check, {
@@ -76,7 +88,9 @@ class Loomtype {
         const passed = this.checkExpectation(output, check.expect);
 
         if (passed) {
-          console.log(chalk.green('✓'));
+          const elapsed = Date.now() - startTime;
+          const timeStr = elapsed > 1000 ? chalk.gray(` (${(elapsed / 1000).toFixed(1)}s)`) : '';
+          console.log(chalk.green('✓') + timeStr);
           results.push({ name, passed: true });
         } else {
           console.log(chalk.red('✗'));
