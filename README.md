@@ -1,7 +1,7 @@
 # <img src="https://raw.githubusercontent.com/rivendare/loomtype/main/assets/logo.png" alt="loomtype" width="34" height="34"> loomtype
 
 [![npm version](https://badge.fury.io/js/loomtype.svg)](https://www.npmjs.com/package/loomtype)
-[![CI](https://github.com/rivendare/loomtype-private/actions/workflows/ci.yml/badge.svg)](https://github.com/rivendare/loomtype-private/actions/workflows/ci.yml)
+[![CI](https://github.com/rivendare/loomtype/actions/workflows/ci.yml/badge.svg)](https://github.com/rivendare/loomtype/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 **tl;dr - give AI context about your patterns, then verify it implemented them correctly
