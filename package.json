@@ -15,7 +15,7 @@
   "type": "module",
   "main": "bin/index.js",
   "bin": {
-    "loomtype": "./bin/cli.js"
+    "loomtype": "bin/cli.js"
   },
   "files": [
     "bin/",
