@@ -254,6 +254,125 @@ describe('loomtype CLI integration tests', () => {
       fs.unlinkSync('.loomtype.yml');
     });
 
+    it('should add verification instructions to AI files during init', () => {
+      // run init - should create .loomtype.yaml AND AGENTS.md
+      const output = execSync(`node ${cli} init`, { encoding: 'utf8' });
+      expect(output).toContain('Created .loomtype.yaml template');
+      expect(output).toContain('Added to AGENTS.md');
+
+      // check AGENTS.md was created with correct content
+      const content = fs.readFileSync('AGENTS.md', 'utf8');
+      expect(content).toContain('<!-- BEGIN LOOMTYPE BLOCK');
+      expect(content).toContain('Pattern Verification');
+      expect(content).toContain('loomtype verify');
+
+      // clean up
+      fs.unlinkSync('AGENTS.md');
+      fs.unlinkSync('.loomtype.yaml');
+    });
+
+    it('should use existing CLAUDE.md during init', () => {
+      // create CLAUDE.md first
+      fs.writeFileSync('CLAUDE.md', '# Existing content\n');
+
+      const output = execSync(`node ${cli} init`, { encoding: 'utf8' });
+      expect(output).toContain('Created .loomtype.yaml template');
+      expect(output).toContain('Added to CLAUDE.md');
+
+      // verify it appended to existing content
+      const content = fs.readFileSync('CLAUDE.md', 'utf8');
+      expect(content).toContain('# Existing content');
+      expect(content).toContain('<!-- BEGIN LOOMTYPE BLOCK');
+
+      // clean up
+      fs.unlinkSync('CLAUDE.md');
+      fs.unlinkSync('.loomtype.yaml');
+    });
+
+    it('should skip AI instructions if already present during init', () => {
+      // create CLAUDE.md with block already there
+      fs.writeFileSync(
+        'CLAUDE.md',
+        dedent(`
+          # Existing
+          <!-- BEGIN LOOMTYPE BLOCK - DO NOT EDIT -->
+          Already here
+          <!-- END LOOMTYPE BLOCK -->
+        `)
+      );
+
+      const output = execSync(`node ${cli} init`, { encoding: 'utf8' });
+      expect(output).toContain('Created .loomtype.yaml template');
+      expect(output).toContain('Already added to CLAUDE.md');
+
+      // clean up
+      fs.unlinkSync('CLAUDE.md');
+      fs.unlinkSync('.loomtype.yaml');
+    });
+
+    it('should handle repeat init correctly', () => {
+      // first init
+      const output1 = execSync(`node ${cli} init`, { encoding: 'utf8' });
+      expect(output1).toContain('Created .loomtype.yaml template');
+      expect(output1).toContain('Added to AGENTS.md');
+
+      // second init - should not overwrite .loomtype.yaml but should recognize AI instructions already exist
+      const output2 = execSync(`node ${cli} init`, { encoding: 'utf8' });
+      expect(output2).toContain('already exists');
+      expect(output2).toContain('Already added to AGENTS.md');
+
+      // verify AGENTS.md still has the block (only one copy)
+      const content = fs.readFileSync('AGENTS.md', 'utf8');
+      const blockCount = (content.match(/<!-- BEGIN LOOMTYPE BLOCK/g) || []).length;
+      expect(blockCount).toBe(1);
+
+      // clean up
+      fs.unlinkSync('AGENTS.md');
+      fs.unlinkSync('.loomtype.yaml');
+    });
+
+    it('should add AI instructions even when only .loomtype.yaml exists', () => {
+      // create .loomtype.yaml manually (simulating someone who created it without init)
+      fs.writeFileSync('.loomtype.yaml', 'version: 1.0\nname: Manual\n');
+
+      const output = execSync(`node ${cli} init`, { encoding: 'utf8' });
+      expect(output).toContain('already exists');
+      expect(output).toContain('Added to AGENTS.md');
+
+      // verify AGENTS.md was created with instructions
+      expect(fs.existsSync('AGENTS.md')).toBe(true);
+      const content = fs.readFileSync('AGENTS.md', 'utf8');
+      expect(content).toContain('<!-- BEGIN LOOMTYPE BLOCK');
+
+      // clean up
+      fs.unlinkSync('AGENTS.md');
+      fs.unlinkSync('.loomtype.yaml');
+    });
+
+    it('should use priority order when multiple AI files exist during init', () => {
+      // create CLAUDE.md and .cursorrules - should prefer CLAUDE.md (higher priority than .cursorrules)
+      fs.writeFileSync('CLAUDE.md', '# CLAUDE\n');
+      fs.writeFileSync('.cursorrules', '# Cursor\n');
+
+      const output = execSync(`node ${cli} init`, { encoding: 'utf8' });
+      expect(output).toContain('Created .loomtype.yaml template');
+      expect(output).toContain('Added to CLAUDE.md');
+
+      // verify CLAUDE.md was modified with the block
+      const claudeContent = fs.readFileSync('CLAUDE.md', 'utf8');
+      expect(claudeContent).toContain('# CLAUDE');
+      expect(claudeContent).toContain('<!-- BEGIN LOOMTYPE BLOCK');
+
+      // verify .cursorrules was NOT modified
+      const cursorContent = fs.readFileSync('.cursorrules', 'utf8');
+      expect(cursorContent).toBe('# Cursor\n');
+
+      // clean up
+      fs.unlinkSync('CLAUDE.md');
+      fs.unlinkSync('.cursorrules');
+      fs.unlinkSync('.loomtype.yaml');
+    });
+
     it('should show elapsed time for slow checks', () => {
       const config = dedent(`
         version: 1.0
