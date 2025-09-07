@@ -138,36 +138,106 @@ class Loomtype {
    * Initialize a new project
    */
   init() {
+    let configCreated = false;
+
     if (fs.existsSync(this.configPath)) {
       console.log(chalk.yellow('.loomtype.yaml already exists'));
+    } else {
+      const template = dedent(`
+        version: 1.0
+        name: My Project
+        description: Add your project description here
+
+        patterns:
+          'Core Principles':
+            - Describe what matters most for your project
+            - Explain the patterns your team follows
+            - List any specific technical requirements
+
+        verify:
+          example-check:
+            check: echo "Replace this with your actual verification command"
+            expect: Replace this with your actual verification command
+            on_fail: Explain what needs to be fixed
+      `);
+
+      fs.writeFileSync(this.configPath, template);
+      console.log(chalk.green(`✓ Created .loomtype.yaml template`));
+      configCreated = true;
+    }
+
+    // always try to add verification instructions to AI files
+    this.addAIInstructions();
+
+    if (configCreated) {
+      console.log('\n' + chalk.bold('Next steps:'));
+      console.log('  1. Edit .loomtype.yaml to add your patterns and verification checks');
+      console.log('  2. AI will run ' + chalk.cyan('loomtype verify') + ' until all checks pass');
+      console.log('  3. You can also run ' + chalk.cyan('loomtype verify') + ' yourself');
+    }
+  }
+
+  /**
+   * Add loomtype verification instructions to AI assistant files
+   */
+  private addAIInstructions() {
+    // AI assistant files to look for (in order of preference)
+    // prettier-ignore
+    const aiFiles = [
+      'AGENTS.md',
+      'CLAUDE.md',
+      '.cursorrules',
+      '.github/copilot-instructions.md'
+    ];
+
+    // find existing AI file or use AGENTS.md as default
+    let targetFile = aiFiles.find(file => fs.existsSync(file));
+
+    if (!targetFile) {
+      targetFile = 'AGENTS.md';
+      // create with minimal header
+      fs.writeFileSync(targetFile, '# AI Assistant Instructions\n\n');
+    }
+
+    // check if loomtype is installed globally
+    const isGlobal =
+      fs.existsSync('/usr/local/bin/loomtype') ||
+      fs.existsSync('/usr/bin/loomtype') ||
+      process.env.PATH?.split(':').some(dir => fs.existsSync(path.join(dir, 'loomtype')));
+
+    const verifyCommand = isGlobal ? 'loomtype verify' : 'npx loomtype verify';
+
+    // the instruction block to add
+    const blockStart = '<!-- BEGIN LOOMTYPE BLOCK - DO NOT EDIT -->';
+    const blockEnd = '<!-- END LOOMTYPE BLOCK -->';
+    const block = dedent(`
+      ${blockStart}
+      ## Pattern Verification
+
+      This project uses loomtype for pattern verification. After making code changes:
+
+      1. Run \`${verifyCommand}\`
+      2. If any checks fail, read the on_fail hints and fix them
+      3. Repeat until all checks pass
+
+      The patterns and verification checks are defined in \`.loomtype.yaml\`
+      ${blockEnd}
+    `);
+
+    // read existing content
+    const content = fs.readFileSync(targetFile, 'utf8');
+
+    // check if block already exists
+    if (content.includes(blockStart)) {
+      console.log(chalk.green(`✓ Already added to ${targetFile}`));
       return;
     }
 
-    const template = dedent(`
-      version: 1.0
-      name: My Project
-      description: Add your project description here
+    // append the block
+    const newContent = content.trimEnd() + '\n\n' + block + '\n';
+    fs.writeFileSync(targetFile, newContent);
 
-      patterns:
-        'Core Principles':
-          - Describe what matters most for your project
-          - Explain the patterns your team follows
-          - List any specific technical requirements
-
-      verify:
-        example-check:
-          check: echo "Replace this with your actual verification command"
-          expect: Replace this with your actual verification command
-          on_fail: Explain what needs to be fixed
-    `);
-
-    fs.writeFileSync(this.configPath, template);
-
-    console.log(chalk.green(`✓ Created .loomtype.yaml`));
-    console.log('\n' + chalk.bold('Next steps:'));
-    console.log('  1. Edit .loomtype.yaml to match your requirements');
-    console.log('  2. Give .loomtype.yaml to your AI assistant');
-    console.log('  3. Run ' + chalk.cyan('loomtype verify') + ' to check implementation');
+    console.log(chalk.green(`✓ Added to ${targetFile}`));
   }
 
   run(command?: string) {
@@ -199,16 +269,15 @@ class Loomtype {
             ${chalk.bold('loomtype')} - verify AI implemented your requirements
 
             ${chalk.bold('Usage:')}
-              loomtype init          Create .loomtype.yaml
+              loomtype init          Create .loomtype.yaml and AI instructions
               loomtype verify        Check if patterns are implemented
               loomtype help          Show this help message
               loomtype version       Show version
 
             ${chalk.bold('Workflow:')}
-              1. ${chalk.cyan('loomtype init')}         # Create .loomtype.yaml
-              2. ${chalk.gray('<Give .loomtype.yaml to AI>')}
-              3. ${chalk.gray('<AI implements code>')}
-              4. ${chalk.cyan('loomtype verify')}       # AI verifies patterns exist
+              1. ${chalk.cyan('loomtype init')}         # Creates config + AI instructions
+              2. ${chalk.gray('<AI implements code>')}
+              3. ${chalk.cyan('loomtype verify')}       # AI verifies patterns exist
 
             ${chalk.bold('What this does:')}
               • Captures patterns you keep explaining to AI

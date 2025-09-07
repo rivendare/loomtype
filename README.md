@@ -84,28 +84,24 @@ npm install -g loomtype
 ## Quick Start
 
 ```bash
-# create .loomtype.yaml with your patterns
+# 1. creates .loomtype.yaml template + adds instructions to AI files
 loomtype init
 
-# verify AI implemented them correctly
+# 2. edit .loomtype.yaml with your patterns and verification checks
+
+# 3. AI runs this (you can too) - keep running until all checks pass
 loomtype verify
 ```
 
 ## How to Use with AI
 
-Give your AI this prompt:
+When you run `loomtype init`, it:
+1. Creates a `.loomtype.yaml` template for you to fill in
+2. Automatically adds instructions to your AI assistant files (CLAUDE.md, .cursorrules, etc.)
 
-```
-This project uses loomtype for pattern verification. Please:
+The AI will see instructions to run `loomtype verify` after making code changes and continue fixing issues until all checks pass.
 
-1. Read the .loomtype.yaml file to understand required patterns
-2. Implement all patterns described
-3. After each major change, run `loomtype verify` 
-4. If any checks fail, read the on_fail hints and fix them
-5. Continue until all checks pass
-
-Important: Keep running `loomtype verify` as you work to ensure patterns are properly implemented!
-```
+> **Note:** You may need to remind the AI to run `loomtype verify` after changes - it's a good practice to mention it when giving implementation tasks.
 
 ## Examples
 
@@ -117,7 +113,7 @@ Check out the [examples directory](./examples) for real-world `.loomtype.yaml` f
 ## Commands
 
 ```bash
-loomtype init           # create .loomtype.yaml
+loomtype init           # create config + AI instructions
 loomtype verify         # check patterns exist
 loomtype help           # show help
 loomtype version        # show version

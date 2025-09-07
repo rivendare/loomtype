@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2024-09-06
+
+### Added
+
+- `loomtype init` now automatically adds verification instructions to AI assistant files
+- Auto-detection of AI files (CLAUDE.md, AGENTS.md, .cursorrules, .github/copilot-instructions.md)
+- Creates AGENTS.md if no AI files exist
+- Idempotent operation - safe to run init multiple times
+
+### Changed
+
+- Combined config creation and AI instructions into single `init` command
+- Simplified workflow from 3 steps to 2
+
 ## [0.1.1] - 2024-09-06
 
 ### Added
@@ -46,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Integration tests using Jest
 - GitHub Actions CI for multiple Node versions
 
-[Unreleased]: https://github.com/rivendare/loomtype/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/rivendare/loomtype/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/rivendare/loomtype/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/rivendare/loomtype/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/rivendare/loomtype/releases/tag/v0.1.0
